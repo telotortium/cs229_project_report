@@ -8,6 +8,7 @@
 \usepackage{url}
 \usepackage{booktabs}
 \usepackage{amsfonts}
+\usepackage{amsmath}
 \usepackage{nicefrac}
 \usepackage{microtype}
 \usepackage{graphicx}
@@ -16,8 +17,9 @@
 \usepackage{xcolor}
 
 
-\newcommand{\note}[1]{\textcolor{blue}{{#1}}}
-\newcommand{\TODO}[1]{\textcolor{red}{{#1}}}
+\newcommand{\note}[1]{\textcolor{blue}{{Note:~#1}}}
+\newcommand{\instructions}[1]{\textcolor{violet}{{#1}}}
+\newcommand{\TODO}[1]{\textcolor{red}{{TODO:~#1}}}
 
 \title{
   AI Tools for Earnings Call Transcript Analysis \\
@@ -52,22 +54,22 @@ The abstract is optional, depending on your available space. It should consist o
 \end{abstract}
 
 
-% \note{This template does not contain the full instruction set for this assignment; please refer back to the milestone instructions PDF.}
+% \instructions{This template does not contain the full instruction set for this assignment; please refer back to the milestone instructions PDF.}
 
 \section{Introduction}
-\note{%
+\instructions{%
 Explain the problem and why it is important. Discuss your motivation for pursuing this problem. Give some background if necessary. Clearly state what the input and output is. Be very explicit: “The input to our algorithm is an {image, amplitude, patient age, rainfall measurements, grayscale video, etc.}. We then use a {SVM, neural network, linear regression, etc.} to output a predicted {age, stock price, cancer type, music genre, etc.}.” This is very important since different teams have different inputs/outputs spanning different application domains. Being explicit about this makes it easier for readers. If you are using your project for multiple classes, add a paragraph explaining which components of the project were used for each class.}
 
 Quarterly earnings call transcripts for publicly traded companies are often fairly large text documents that include lots of information about future growth of the company, its past performance and new initiatives and product launches. Once this information is released, if there is a strong and consistent positive outlook for the company in the content of the transcript, it results in a jump in stock price of the company in the next few days, while a negative sentiment and potential risks result in selloff of stock and price drop. In this project, we aim to explore a variety of machine learning tools within the domain of natural language processing to showcase how an ML model can extract relevant information and predict the “outcome” of the earning call (positive or negative stock price reaction) given the content of the text in the earning call. In particular, we will build a deep learning based sentiment analysis classifier predicting 3 classes of “positive”, “negative” and “neutral” using publicly available sentiment annotated datasets. In addition we will explore other NLP approaches to segment and summarize the transcripts as they are often large and cannot be meaningfully represented as a vector for a classification task. Finally we will measure how different NLP components can generate signals to predict the outcome of the stock price reaction to earning calls. 
 
 
 \section{Related Work}
-\note{%
+\instructions{%
 You should find existing papers, group them into categories based on their approaches, and discuss their strengths and weaknesses, as well as how they are similar to and differ from your work. In your opinion, which approaches were clever/good? What is the state- of-the-art? Do most people perform the task by hand? You should aim to have at least 5 references in the related work. Include previous attempts by others at your problem, previous technical methods, or previous learning algorithms. Google Scholar is very useful for this: https://scholar.google.com/ (you can click “cite” and it generates MLA, APA, BibTeX, etc.)
 }
 
 \section{Dataset and Features}
-\note{%
+\instructions{%
 Describe your dataset: how many training/validation/test examples do you have? Is there any preprocessing you did? What about normalization or data augmentation? What is the resolution of your images? How is your time-series data discretized? Include a citation on where you obtained your dataset from. Depending on available space, show some examples from your dataset. You should also talk about the features you used. If you extracted features using Fourier transforms, word2vec, histogram of oriented gradients (HOG), PCA, ICA, etc. make sure to talk about it. Try to include examples of your data in the report (e.g. include an image, show a waveform, etc.).
 }
 
@@ -75,10 +77,94 @@ Describe your dataset: how many training/validation/test examples do you have? I
 
 To evaluate the reaction of stock price to earning calls, we need at minimum two types of raw data: earning call transcripts and historical stock price data.
 We initially collected a large number of earning call transcripts, most of which were Q4 2023 earning reports from January-February 2024, as PDF printouts from the financial website Seeking Alpha.
-Stock price data is collected from Yahoo Finance and is used to train the model to predict the stock price reaction to earning calls. Earning call transcripts are collected from the SEC website and are used to evaluate the performance of the model.
+These were separated into a training set of 684 transcripts and a test set of 163 transcripts.
+Both sets were then processed using a custom pipeline to extract the following features:
+\begin{itemize}
+  \item The stock symbol of the company
+  \item The date of the earning call
+  \item Stock prices at close for all trading days from 1 day before the earning call to 3 days after the earning call. These were downloaded from Yahoo Finance.
+  \item Whether the stock beat or missed analyst expectations for earnings per share (EPS) and revenue, and by how much
+  \item The names and titles (e.g., CEO, CFO, representative from an investment bank) for speakers on the call
+  \item Speaker for each paragraph in the earning call transcript
+\end{itemize}
+
+In order to reduce the influence of broad market movements on the stock price reaction, we also downloaded from Yahoo Finance the price of the S\&P 500 index (using the SPY ETF).
+We then calculated the excess return for each stock (i.e., the return of the stock relative to the market) as follows:
+\begin{align*}
+        %symbol_return = (symbol_frame.loc[symbol_max_date]["Close"] - symbol_frame.loc[symbol_min_date]["Close"]) / symbol_frame.loc[symbol_min_date]["Close"]
+  \text{Return}(\text{stock}) &= \frac{\text{Price}_{t+3}(\text{stock})-\text{Price}_{t-1}(\text{stock})}{\text{Price}_{t-1}(\text{stock})} \\
+  \text{ExcessReturn}(\text{stock}) &= \text{Return}(\text{stock}) - \text{Return}(\text{SPY})
+\end{align*}
+
+The primary label we predicted for each stock is whether the excess return of the stock was positive or nonpositive.
+
+\TODO{Move to appendix to avoid taking space in main report} For example, for Meta Platforms (NASDAQ:META), we downloaded the following CSV file from Yahoo Finance for stock price data:
+
+\begin{verbatim}
+  Symbol,Date,Open,High,Low,Close,Adj Close,Volume
+  META,2024-02-01,393.940002,400.5,393.049988,394.779999,394.361572,29727100.0
+  META,2024-02-02,459.600006,485.959991,453.01001,474.98999,474.486542,84615500.0
+  META,2024-02-05,469.880005,471.899994,459.220001,459.410004,458.923065,40832400.0
+  META,2024-02-06,464.0,467.119995,453.0,454.720001,454.238037,21655200.0
+\end{verbatim}
+
+In addition, we produced the following JSON for each earning call transcript containing data on analyst expectations as well as speakers:
+
+\begin{verbatim}
+"META": {
+  "expectation_results": {
+    "eps": {
+      "value": "5.33",
+      "beats_by": "0.36"
+    },
+    "revenue": {
+      "value": "40.11B",
+      "YoY_percent": "24.70",
+      "beats_by": "940.64M"
+    }
+  },
+  "company_name": "Meta Platforms, Inc.",
+  "participants": {
+    "Ken Dorell": "Director, IR",
+    "Mark Zuckerberg": "Founder, Chairman & CEO",
+    "Susan Li": "CFO",
+    "Brian Nowak": "Morgan Stanley",
+    "Eric Sheridan": "Goldman Sachs Group",
+    "Mark Shmulik": "Sanford C. Bernstein & Co.",
+    "Justin Post": "Bank of America Merrill Lynch",
+    "Ross Sandler": "Barclays Bank",
+    "Doug Anmuth": "JPMorgan Chase & Co.",
+    "Ronald Josey": "Citigroup"
+  },
+  "paragraphs": [
+    {
+      "speaker": "Operator",
+      "text": "Good afternoon. My name is Krista and I'll be your conference operator today. At this time, I would like to welcome everyone to the Meta Fourth Quarter and Full Year 2023 Earnings Conference Call. [Operator Instructions]. Ken Dorell, Meta's Director of Investor Relations, you may begin."
+    },
+    {
+      "speaker": "Ken Dorell",
+      "text": "Thank you. Good afternoon and welcome to Meta Platform's Fourth Quarter and Full Year 2023 Earnings Conference Call. Joining me today to discuss our results are Mark Zuckerberg, CEO; and Susan Li, CFO. Before we get started, I would like to take this opportunity to remind you that our remarks today will include forward-looking statements. Actual results may differ materially from those contemplated by these forward-looking statements. Factors that could cause these results to differ materially are set forth in today's earnings press release and in our quarterly report on Form 10-Q filed with the SEC. Any forwardlooking statements that we make on this call are based on assumptions as of today, and we undertake no obligation to update these statements as a result of new information or future events."
+    },
+    {
+      "speaker": "Ken Dorell",
+      "text": "During this call, we will present both GAAP and certain non-GAAP financial measures. A reconciliation of GAAP to non-GAAP measures is included in today's earnings press release. The earnings press release and an accompanying investor presentation are available on our website at investor.fb.com."
+    },
+    {
+      "speaker": "Ken Dorell",
+      "text": "And now I'd like to turn the call over to Mark."
+    },
+    {
+      "speaker": "Mark Zuckerberg",
+      "text": "All right. Hi, everyone. Thanks for joining us. This was a good quarter, and it wrapped up an important year for our community and our company. We estimate that there are more than 3.1 billion people who use at least one of our apps each day. 2023 was our year of efficiency, which focused on making Meta a stronger technology company and improving our business to give us the stability to deliver our ambitious long-term vision for AI and the metaverse."
+    },
+    [...]
+  ]
+}
+\end{verbatim}
+
 
 \section{Methods}
-\note{%
+\instructions{%
 Describe your learning algorithms, proposed algorithm(s), or theoretical proof(s). Make sure to include relevant mathematical notation. For example, you can briefly include the SVM optimization objective/formula or say what the softmax function is. It is okay to use formulas from the lecture notes. For each algorithm, give a short description (\~ 1 para- graph) of how it works. Again, we are looking for your understanding of how these machine learning algorithms work. Although the teaching staff probably know the algorithms, future readers may not (reports will be posted on the class website). Additionally, if you are using a niche or cutting-edge algorithm (e.g. long short-term memory, SURF features, or anything else not covered in the class), you may want to explain your algorithm using 1/2 paragraphs. Note: Theory/algorithms projects may have an appendix showing extended proofs (see Appendix section below).
 }
 
@@ -86,8 +172,12 @@ We will first explore the problem of text classification and machine learning me
 
 A key element of a text classifier is representation of words of the document as vectors and in turn constructing a vector representation of larger elements of text such as sentences and paragraphs. As our baseline model we have explored Glove vectors as our pre-trained semantic representation of words and if time permits will explore sub-word methodologies similar to the original BERT paper. We have established some baseline classification model performance metrics using simple averaging of word vectors as will be discussed in the next section. For more advanced methodologies, we will explore LSTM, convolutional neural networks for sentence classification as well as few pre-trained sentence embedding models such as universal sentence encoder and BERT (if time permits). We can fine-tune or use these pre-trained models without tuning and append fully connected neural networks with an N-class output layer at the end to train these models on sentiment datasets mentioned above.
 
+\TODO{Connect sentiment analysis and prediction} As described above, the primary label we are trying to predict for a given stock is the sign of the excess return.
+This is a classification problem where the output is a binary value (positive or negative).
+As for the features, we[]
+
 \section{Experiments / Results / Discussion}
-\note{%
+\instructions{%
 You should also give details about what (hyper)parameters you chose (e.g. why did you use X learning rate for gradient descent, what was your mini-batch size and why) and how you chose them. Did you do cross-validation, if so, how many folds? Before you list your results, make sure to list and explain what your primary metrics are: accuracy, precision, AUC, etc. Provide equations for the metrics if necessary. For results, you want to have a mixture of tables and plots. If you are solving a classification problem, you should include a confusion matrix or AUC/AUPRC curves. Include performance metrics such as precision, recall, and accuracy. For regression problems, state the average error. You should have both quantitative and qualitative results. To reiterate, you must have both quantitative and qualitative results! This includes unsupervised learning (talk with your project TA on how to quantify unsupervised methods). Include visualizations of results, heatmaps, examples of where your algorithm failed and a discussion of why certain algorithms failed or succeeded. In addition, explain whether you think you have overfit to your training set and what, if anything, you did to mitigate that. Make sure to discuss the figures/tables in your main text throughout this section. Your plots should include legends, axis labels, and have font sizes that are legible when printed.
 }
 
@@ -95,31 +185,31 @@ To be added
 
 
 \section{Conclusion / Future Work}
-\note{%
+\instructions{%
 Summarize your report and reiterate key points. Which algorithms were the highest-performing? Why do you think that some algorithms worked better than others? For future work, if you had more time, more team members, or more computational resources, what would you explore?
 }
 
 \section{Appendices}
-\note{%
+\instructions{%
 This section is optional for theory/algorithmic projects. Include additional derivations of proofs which weren’t core to the understanding of your proposed algorithm in the methods section.
 Note: All sections before this point must fit on five (5) pages. No exceptions. Supplemental material is not allowed. Anything else you want to add to your report (e.g. acknowledgements, author bios, funding sources) is included in the 5 page limit. The exception is the section describing the contributions of each team member. You will be penalized -10 points per page exceeding this limit. The max report score is 100.
 }
 
 \section{Contributions}
-\note{%
+\instructions{%
 The contributions section is not included in the 5 page limit. This section should describe what each team member worked on and contributed to the project.
 }
 
 \section{Note on citations}
-\note{%
+\instructions{%
 There are two citation commands:
 }
 
-\note{%
+\instructions{%
 \paragraph{Citation in parentheses} The command \texttt{\textbackslash{}citep\{\}}  is for when you cite a paper at the end of a clause, and you could read the text out loud and not read the authors' names. For example ``We also run our experiments on a multilingual language model \citep{rajpurkar2018know}.'' 
 }
 
-\note{%
+\instructions{%
 \paragraph{Citation in text} The command \texttt{\textbackslash{}citet\{\}} is for in-text citations, when someone reading the text out loud would have to read the names of the authors for the sentence to make sense. For example, ``We also run our experiments on the multilingual model described in \citet{rajpurkar2018know}.''
 }
 
