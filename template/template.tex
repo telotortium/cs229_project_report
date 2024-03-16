@@ -13,13 +13,29 @@
 \usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{listings}
 \usepackage{lipsum}
 \usepackage{xcolor}
+\usepackage{bm}
+
 
 
 \newcommand{\note}[1]{\textcolor{blue}{{Note:~#1}}}
-\newcommand{\instructions}[1]{\textcolor{violet}{{#1}}}
 \newcommand{\TODO}[1]{\textcolor{red}{{TODO:~#1}}}
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% Define a boolean variable
+\newif\ifshowInstructions
+% Uncomment the line below if you want the instructions to be shown by default, or comment it to hide instructions
+\showInstructionstrue
+
+% Define the command
+\newcommand{\instructions}[1]{%
+    \ifshowInstructions%
+        \textcolor{violet}{#1}%
+    \fi%
+}
 
 \title{
   AI Tools for Earnings Call Transcript Analysis \\
@@ -49,31 +65,145 @@ Arman Akbarian Kaljahi  \\
 
 \maketitle
 
-\begin{abstract}
-The abstract is optional, depending on your available space. It should consist of 1 paragraph consisting of the motivation for your paper and a high-level explanation of the methodology you used/results obtained.
-\end{abstract}
+\TODO{Add abstract back if space permits}
+%\begin{abstract}
+%The abstract is optional, depending on your available space. It should consist of 1 paragraph consisting of the motivation for your paper and a high-level explanation of the methodology you used/results obtained.
+%\end{abstract}
 
 
 % \instructions{This template does not contain the full instruction set for this assignment; please refer back to the milestone instructions PDF.}
 
-\section{Introduction}
+\section{Introduction\instructions{{} | 0.5 page}}
 \instructions{%
 Explain the problem and why it is important. Discuss your motivation for pursuing this problem. Give some background if necessary. Clearly state what the input and output is. Be very explicit: “The input to our algorithm is an {image, amplitude, patient age, rainfall measurements, grayscale video, etc.}. We then use a {SVM, neural network, linear regression, etc.} to output a predicted {age, stock price, cancer type, music genre, etc.}.” This is very important since different teams have different inputs/outputs spanning different application domains. Being explicit about this makes it easier for readers. If you are using your project for multiple classes, add a paragraph explaining which components of the project were used for each class.}
 
-Quarterly earnings call transcripts for publicly traded companies are often fairly large text documents that include lots of information about future growth of the company, its past performance and new initiatives and product launches. Once this information is released, if there is a strong and consistent positive outlook for the company in the content of the transcript, it results in a jump in stock price of the company in the next few days, while a negative sentiment and potential risks result in selloff of stock and price drop. In this project, we aim to explore a variety of machine learning tools within the domain of natural language processing to showcase how an ML model can extract relevant information and predict the “outcome” of the earning call (positive or negative stock price reaction) given the content of the text in the earning call. In particular, we will build a deep learning based sentiment analysis classifier predicting 3 classes of “positive”, “negative” and “neutral” using publicly available sentiment annotated datasets. In addition we will explore other NLP approaches to segment and summarize the transcripts as they are often large and cannot be meaningfully represented as a vector for a classification task. Finally we will measure how different NLP components can generate signals to predict the outcome of the stock price reaction to earning calls. 
+Quarterly earnings call transcripts for publicly traded companies are 
+often fairly large text documents that include lots of information about 
+future growth of the company, its past performance and new initiatives 
+and product launches. Once this information is released, if there is 
+a strong and consistent positive outlook for the company in the 
+content of the transcript, it results in a jump in stock price 
+of the company in the next few days, while a negative sentiment 
+and potential risks result in selloff of stock and price drop. 
+
+In this project, we explore a two step ML technique where we
+train a sentiment classifier model on large publicly available datasets 
+and then use this classifier to extract sentiment statistics from the earning
+call transcripts (a small dataset we created by crawling the web). 
+In the second step, we combine these sentiment scores with other tabular and financial 
+data we can extract from the earning call to train a smaller
+classifier model that predicts stock price movement direction after earning call. 
+
+In particular, the inputs used to construct the features of our algorithm consists of numbers detailed how much the stock's earnings per share (EPS) and revenues beat or missed Wall Street analyst expectations, as well as sentiment data derived from remarks by the CEO and CFO of the company during the earnings call.
+The sentiment data is calculated using an NLP sentiment classifier (from scratch training of word embedding and averaging, or use LSTM to process vector sequence, as well as glove vectors and BERT pre-trained model).
+We then use these features to classify each stock according to whether its price grew more or less than the growth of the overall market over the next 3 trading days after the earnings call.
 
 
-\section{Related Work}
+\section{Related Work\instructions{{} | 0.5 page | WIP }}
 \instructions{%
 You should find existing papers, group them into categories based on their approaches, and discuss their strengths and weaknesses, as well as how they are similar to and differ from your work. In your opinion, which approaches were clever/good? What is the state- of-the-art? Do most people perform the task by hand? You should aim to have at least 5 references in the related work. Include previous attempts by others at your problem, previous technical methods, or previous learning algorithms. Google Scholar is very useful for this: https://scholar.google.com/ (you can click “cite” and it generates MLA, APA, BibTeX, etc.)
 }
+
+\TODO{Arman: working on this... don't mind the links}
+
+An Exploratory Study of Stock Price Movements from Earnings
+Calls
+https://arxiv.org/pdf/2203.12460.pdf
+
+Towards Earnings Call and Stock Price Movement
+
+https://arxiv.org/pdf/2009.01317.pdf
+
+Can Earnings Call Sentiment Predict Stock Price Movement?
+
+%verb|https://web.p.ebscohost.com/ehost/pdfviewer/pdfviewer?vid=0&sid=3f881f6c-d2d5-4401-aeed-e7e2dd5a2703%40redis|
+
+
+\TODO{Robert: Got the following from Google Gemini Pro. Will read the papers and see how relevant they are.}
+
+\subsection{Prior Work on Stock Price Prediction with Earnings Calls and
+NLP}\label{prior-work-on-stock-price-prediction-with-earnings-calls-and-nlp}
+
+Your research topic combines sentiment analysis from earnings calls with
+EPS data to predict stock performance. Here's some relevant prior work
+you can explore:
+
+\begin{itemize}
+\item
+  \textbf{The predictive power of earnings conference calls:}
+  This research \citep{Solberg2018ThePP} investigates using earnings calls to predict stock price direction for the next day.
+  It explores the potential of this approach.
+\item
+  \textbf{Predicting Stock Price Changes with Earnings Call Transcripts:}
+  This paper \citep{liang2016predicting} delves into using deep learning with attention mechanisms to analyze earnings call transcripts.
+  It highlights the potential of NLP for understanding the impact of the call on stock prices.
+\item
+  \textbf{An Exploratory Study of Stock Price Movements from Earnings
+  Calls:} This study
+  (\url{https://www.nasdaq.com/articles/how-stock-prices-correlate-with-quarterly-earnings-and-when-you-should-buy})
+  explores the sentiment analysis of earnings calls and its correlation
+  with stock price movements. It provides evidence that positive
+  sentiment correlates with price increase and vice versa.
+\item
+  (Trying to) Predict stock performance based on Earning Call
+  transcripts: {[}invalid URL removed{]} offers a practical approach to
+  analyzing earnings call transcripts for predicting stock performance.
+  It explores sentiment analysis and classification methods.
+\item
+  GitHub repository: Earnings-Calls-NLP:
+  \url{https://github.com/cdubiel08/Earnings-Calls-NLP} provides sample
+  code for analyzing earnings call transcripts using NLP techniques for
+  stock price prediction. This can be a helpful resource to understand
+  the technical aspects of implementing your research.
+\end{itemize}
+
+These resources explore the connection between sentiment analysis of
+earnings calls and stock price movements. Remember, predicting the stock
+market is inherently challenging, and these approaches offer some
+insights but should not be considered foolproof methods for investment
+decisions.
+
+From milestone brainstorming doc
+
+\begin{itemize}
+\tightlist
+\item
+  \url{https://dataverse.nl/dataset.xhtml?persistentId=doi:10.34894/TJE0D0}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Very similar raw data to what we have
+  \item
+    Google Scholar citations:
+  \item
+    \url{https://scholar.google.com/scholar?cites=13106818547419587054&as_sdt=2005&sciodt=0,5&hl=en}
+  \item
+    Kansas City
+    Fed:\url{https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4627143}
+  \item
+    Predicting Stock Performance Using Quarterly Analyst's Call
+    Transcripts and Natural Language Processing (NLP): An
+    Exploration:\url{https://search.proquest.com/openview/83d6069f8fa228b3c64fdd9427b67f4f/1?pq-origsite=gscholar&cbl=18750&diss=y}
+  \end{itemize}
+\end{itemize}
+
 
 \section{Dataset and Features}
 \instructions{%
 Describe your dataset: how many training/validation/test examples do you have? Is there any preprocessing you did? What about normalization or data augmentation? What is the resolution of your images? How is your time-series data discretized? Include a citation on where you obtained your dataset from. Depending on available space, show some examples from your dataset. You should also talk about the features you used. If you extracted features using Fourier transforms, word2vec, histogram of oriented gradients (HOG), PCA, ICA, etc. make sure to talk about it. Try to include examples of your data in the report (e.g. include an image, show a waveform, etc.).
 }
 
-\TODO{Shawn: how did you collect the Earning Call Transcripts?}
+In an effort to leverage Natural Language Processing (NLP) for financial sentiment analysis, we undertook a comprehensive project focusing on earnings call transcripts. The project's aim was to extract meaningful insights, particularly around CEO and CFO remarks to predict market reaction to these remarks. Here's a step-by-step breakdown of the process:
+\begin{enumerate}
+    \item Data Collection: The project commenced with the collection of earnings call transcripts. These documents were sourced from Seeking Alpha website (\hyperref[www]{https://seekingalpha.com/}).
+  \item Pre-processing: The raw transcripts were converted from PDF to text files, facilitating easier manipulation and analysis. This conversion was crucial for the text-cleaning phase, as it enabled the removal of non-essential elements such as headers, footers, and URLs that could skew the analysis. Additionally, greetings and common phrases at the beginning of speeches were identified and removed to focus solely on the content's essence.
+  \item Text Cleaning, Normalization and Feature Engineering: Advanced text-cleaning and normalization techniques were employed to refine the data further. This step involved converting all text to lowercase (or another uniform case), removing unnecessary punctuation, and resolving abbreviations to their full forms to standardize the text. Additionally, we eliminated greetings and common phrases at the beginning of speeches. The aim was to ensure the analysis would be based purely on the substantive content of the earnings calls, devoid of any irrelevant or distracting information.
+  \item Identifying and Extracting Key Remarks: One crucial step in our analysis involved pinpointing and extracting the remarks made by pivotal figures during the earnings calls, specifically the CEO (Chief Executive Officer) and the CFO (Chief Financial Officer). The process required devising a reliable method to accurately locate their names within the text and then isolate their subsequent remarks. By concentrating on these particular excerpts, our objective was to analyze and summarize the core sentiments and strategic insights shared by the company's top leadership. This focused approach allowed us to capture the most impactful aspects of the earnings calls, shedding light on the company's future direction and priorities as articulated by its key decision-makers.
+  \item Sentiment Analysis: The cleaned and targeted excerpts from the transcripts were then subjected to sentiment analysis. This NLP task involved assessing the tone and sentiment of the CEO and CFO remarks to infer the company's outlook as positive, negative, or neutral.
+
+\end{enumerate}
+
 
 To evaluate the reaction of stock price to earning calls, we need at minimum two types of raw data: earning call transcripts and historical stock price data.
 We initially collected a large number of earning call transcripts, most of which were Q4 2023 earning reports from January-February 2024, as PDF printouts from the financial website Seeking Alpha.
@@ -97,97 +227,255 @@ We then calculated the excess return for each stock (i.e., the return of the sto
 \end{align*}
 
 The primary label we predicted for each stock is whether the excess return of the stock was positive or nonpositive.
+An example of stock price return data (with postive excess return) is in Listing \ref{metareturncsv}.
+We have also included an example of the transcript, processed to extract results compared to expectations, in Listing \ref{metajson}.
+The beating of EPS expectations and the positive leading comment from the CEO accords with the market-beating returns.
 
-\TODO{Move to appendix to avoid taking space in main report} For example, for Meta Platforms (NASDAQ:META), we downloaded the following CSV file from Yahoo Finance for stock price data:
-
-\begin{verbatim}
-  Symbol,Date,Open,High,Low,Close,Adj Close,Volume
-  META,2024-02-01,393.940002,400.5,393.049988,394.779999,394.361572,29727100.0
-  META,2024-02-02,459.600006,485.959991,453.01001,474.98999,474.486542,84615500.0
-  META,2024-02-05,469.880005,471.899994,459.220001,459.410004,458.923065,40832400.0
-  META,2024-02-06,464.0,467.119995,453.0,454.720001,454.238037,21655200.0
-\end{verbatim}
-
-In addition, we produced the following JSON for each earning call transcript containing data on analyst expectations as well as speakers:
-
-\begin{verbatim}
-"META": {
+\begin{minipage}[t]{0.45\textwidth}
+\begin{lstlisting}[caption={META: Stock Price Return Data (CSV)}, label=metareturncsv, frame=single, basicstyle=\small, numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt, showstringspaces=false, aboveskip=0pt, belowskip=0pt, captionpos=b, aboveskip=-0.5em, belowskip=-1.5em, xleftmargin=0.5em, xrightmargin=0.5em, breaklines=true, breakatwhitespace=true, escapeinside={(*@}{@*)}]
+Symbol,Return,Market Return,Risk-Free Return,Excess Return
+META,0.1518,0.0098,0.0004,0.1421
+\end{lstlisting}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.45\textwidth}
+\begin{lstlisting}[caption={META: Structured Transcript with speakers (JSON)}, label=metajson, frame=single, basicstyle=\tiny, numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt, showstringspaces=false, aboveskip=0pt, belowskip=0pt, captionpos=b, aboveskip=-0.5em, belowskip=-1.5em, xleftmargin=0.5em, xrightmargin=0.5em, breaklines=true, breakatwhitespace=true, escapeinside={(*@}{@*)}]
   "expectation_results": {
     "eps": {
       "value": "5.33",
       "beats_by": "0.36"
     },
-    "revenue": {
-      "value": "40.11B",
-      "YoY_percent": "24.70",
-      "beats_by": "940.64M"
-    }
+    "revenue": [...]
   },
-  "company_name": "Meta Platforms, Inc.",
   "participants": {
-    "Ken Dorell": "Director, IR",
     "Mark Zuckerberg": "Founder, Chairman & CEO",
-    "Susan Li": "CFO",
-    "Brian Nowak": "Morgan Stanley",
-    "Eric Sheridan": "Goldman Sachs Group",
-    "Mark Shmulik": "Sanford C. Bernstein & Co.",
-    "Justin Post": "Bank of America Merrill Lynch",
-    "Ross Sandler": "Barclays Bank",
-    "Doug Anmuth": "JPMorgan Chase & Co.",
-    "Ronald Josey": "Citigroup"
+    [...]
   },
   "paragraphs": [
     {
-      "speaker": "Operator",
-      "text": "Good afternoon. My name is Krista and I'll be your conference operator today. At this time, I would like to welcome everyone to the Meta Fourth Quarter and Full Year 2023 Earnings Conference Call. [Operator Instructions]. Ken Dorell, Meta's Director of Investor Relations, you may begin."
-    },
-    {
-      "speaker": "Ken Dorell",
-      "text": "Thank you. Good afternoon and welcome to Meta Platform's Fourth Quarter and Full Year 2023 Earnings Conference Call. Joining me today to discuss our results are Mark Zuckerberg, CEO; and Susan Li, CFO. Before we get started, I would like to take this opportunity to remind you that our remarks today will include forward-looking statements. Actual results may differ materially from those contemplated by these forward-looking statements. Factors that could cause these results to differ materially are set forth in today's earnings press release and in our quarterly report on Form 10-Q filed with the SEC. Any forwardlooking statements that we make on this call are based on assumptions as of today, and we undertake no obligation to update these statements as a result of new information or future events."
-    },
-    {
-      "speaker": "Ken Dorell",
-      "text": "During this call, we will present both GAAP and certain non-GAAP financial measures. A reconciliation of GAAP to non-GAAP measures is included in today's earnings press release. The earnings press release and an accompanying investor presentation are available on our website at investor.fb.com."
-    },
-    {
-      "speaker": "Ken Dorell",
-      "text": "And now I'd like to turn the call over to Mark."
-    },
-    {
       "speaker": "Mark Zuckerberg",
-      "text": "All right. Hi, everyone. Thanks for joining us. This was a good quarter, and it wrapped up an important year for our community and our company. We estimate that there are more than 3.1 billion people who use at least one of our apps each day. 2023 was our year of efficiency, which focused on making Meta a stronger technology company and improving our business to give us the stability to deliver our ambitious long-term vision for AI and the metaverse."
+      "text": "All right. Hi, everyone. Thanks for joining us. This was a good quarter, [...]"
     },
     [...]
   ]
-}
-\end{verbatim}
-
+\end{lstlisting}
+\end{minipage}
 
 \section{Methods}
 \instructions{%
 Describe your learning algorithms, proposed algorithm(s), or theoretical proof(s). Make sure to include relevant mathematical notation. For example, you can briefly include the SVM optimization objective/formula or say what the softmax function is. It is okay to use formulas from the lecture notes. For each algorithm, give a short description (\~ 1 para- graph) of how it works. Again, we are looking for your understanding of how these machine learning algorithms work. Although the teaching staff probably know the algorithms, future readers may not (reports will be posted on the class website). Additionally, if you are using a niche or cutting-edge algorithm (e.g. long short-term memory, SURF features, or anything else not covered in the class), you may want to explain your algorithm using 1/2 paragraphs. Note: Theory/algorithms projects may have an appendix showing extended proofs (see Appendix section below).
 }
 
-We will first explore the problem of text classification and machine learning methodologies used to represent text as a vector. In particular, there are a variety of publicly available sentiment analysis datasets (IMDB, SST-2 Binary classification, Yelp Binary classification) that we will benchmark our baseline and more advanced models on. 
+\TODO{Arman: add methods used for text classification and sentiment analysis \\ }%
 
-A key element of a text classifier is representation of words of the document as vectors and in turn constructing a vector representation of larger elements of text such as sentences and paragraphs. As our baseline model we have explored Glove vectors as our pre-trained semantic representation of words and if time permits will explore sub-word methodologies similar to the original BERT paper. We have established some baseline classification model performance metrics using simple averaging of word vectors as will be discussed in the next section. For more advanced methodologies, we will explore LSTM, convolutional neural networks for sentence classification as well as few pre-trained sentence embedding models such as universal sentence encoder and BERT (if time permits). We can fine-tune or use these pre-trained models without tuning and append fully connected neural networks with an N-class output layer at the end to train these models on sentiment datasets mentioned above.
+\subsection{Sentiment Analysis and Text Classification}
+We first explored the problem of text classification and machine learning methodologies used to represent text as a vector. Traditional 
+approach to represent a text is bag of words (where each word
+can be presented as a one-hot vector). The problem with this technique
+is that every word is effectively orthogonal to another word in its
+mathematical representation while we know there are semantic relations and 
+similarities between words. We explored using dense representation
+where we allow vectors to be trained as part of the neural network 
+(starting at random). The better approach is to use pre-trained Word2Vec {\bf cite glove} or Glove vectors {\bf cite glove}, a large corpus of text
+such as entire web crawl is used to learn a semantic vector to represent words.
+In particular, the objective is to represents word $w$ with vector $\vec{w}$ such that the likelihood of observing word $w_i$ {\it near} (a window of 3 words to left and right for example) to word $w_j$ is given by:
+\begin{equation}
+p(w_i|w_j) = \frac{\exp(\vec{w}_i . \vec{w}_j)}{\sum_k \exp(\vec{w_i}.\vec{w_k})}
+\end{equation}
+Using the likelihood definition above and 
+given a corpus and a definition of a window of {\it near} words, the
+algorithm maximizes the likelihood of the observation of such co-occurance
+of words in the corpus by tuning the word vectors.
 
-\TODO{Connect sentiment analysis and prediction} As described above, the primary label we are trying to predict for a given stock is the sign of the excess return.
+For an ML model to learn sentiment of a sentence or paragraph, we explore
+averaging word vectors of the paragraph as well as using LSTM {\bf cite LSTM}
+from the category of recurrent neural networks. In short, in an RNN, 
+the sequence of vectors, $\mathbf{x}^{(t)}$ (i.e. a sentence) are {\em read} 
+from left to right with a nonlinear
+transformations to update a hidden state $\mathbf{h^{(t)}}$ from
+its previous state. In "vanilla" form, the forward propagation of
+an RNN  can be written as:
+\begin{equation}
+    \mathbf{h^{(t)}} = f(\mathbf{h^{(t-1)}}, \mathbf{x}^{(t)}, \mathbf{W})
+\end{equation}
+where ${\mathbf W}$ encapsulates all the learnable parameters of the function $f$. The final state of the RNN, $\mathbf{h^{(T)}}$ (once full
+sequence is read) is often used to represent the full sentence. 
+In addition to LSTM, we also explore contextual representation
+of words such as pre-trained BERT {\bf cite bert} model and
+utilize IMDB dataset as a common dataset used for sentiment classification
+benchmarking of various deep learning NLP architectures.
+
+\subsection{Excess Return Prediction}
+As described above, the primary label we are trying to predict for a given stock is the sign of the excess return.
 This is a classification problem where the output is a binary value (positive or negative).
-As for the features, we[]
+For this classification problem, we explored several standardized classification models, as implemented in Scikit-Learn \citep{scikit-learn}.
+We decided to test three classifiers: logistic regression, AdaBoost \citep{10.1007/3-540-59119-2_166}, and Gradient Boosting \citep{4a848dd1-54e3-3c3c-83c3-04977ded2e71}.
+More details of the hyperparameters, feature processing, and the like will be found in Section \ref{excess_return_prediction}.
 
 \section{Experiments / Results / Discussion}
 \instructions{%
 You should also give details about what (hyper)parameters you chose (e.g. why did you use X learning rate for gradient descent, what was your mini-batch size and why) and how you chose them. Did you do cross-validation, if so, how many folds? Before you list your results, make sure to list and explain what your primary metrics are: accuracy, precision, AUC, etc. Provide equations for the metrics if necessary. For results, you want to have a mixture of tables and plots. If you are solving a classification problem, you should include a confusion matrix or AUC/AUPRC curves. Include performance metrics such as precision, recall, and accuracy. For regression problems, state the average error. You should have both quantitative and qualitative results. To reiterate, you must have both quantitative and qualitative results! This includes unsupervised learning (talk with your project TA on how to quantify unsupervised methods). Include visualizations of results, heatmaps, examples of where your algorithm failed and a discussion of why certain algorithms failed or succeeded. In addition, explain whether you think you have overfit to your training set and what, if anything, you did to mitigate that. Make sure to discuss the figures/tables in your main text throughout this section. Your plots should include legends, axis labels, and have font sizes that are legible when printed.
 }
+\subsection{Sentiment Classification}
+\begin{table}[]
+    \centering
+    \begin{tabular}{c|c|c|c|c}
+    \hline
+        Model & Train Acc. & Valid Acc. & Test Acc. & Fin. Text Test Acc.  \\
+        \hline
+          Random WordVecs + Word Averaging & 0.971 & 0.891 & 0.888 & 0.614 \\
+         \hline
+          Random WordVecs + LSTM & 0.960 & 0.851 & 0.850 & 0.594 \\
+         \hline
+          Glove WordVecs + Word Averaging & 0.5 & 0.5 & 0.5 \\
+         \hline
+          Glove WordVecs + LSTM & 0.5 & 0.5 & 0.5 \\
+         \hline
+    \end{tabular}
+    \caption{Caption}
+    \label{tab:my_label}
+\end{table}
 
-To be added
+\subsection{Excess Return Prediction}% \label{excess_return_prediction}
+\subsubsection{Hyperparameters}
+
+For the logistic regression, we used L2 regularization.
+In addition, since the revenue features are on the scale of millions to billions of dollars (both positive and negative), the EPS is on the order of tens to hundreds of dollars, and the sentiment scores are in the range $[0,1]$, it was necessary to scale each feature dimension to be on the same order of magnitude for logistic regression to work.
+This was done using the \texttt{StandardScaler} class of Scikit-Learn, which transforms each feature to have zero mean and unit variance.
+This transformation was not needed for the AdaBoost and Gradient Boosting classifier, so we did not perform it.
+
+On the other hand, the performance of the AdaBoost and Gradient Boosting classifiers are sensitive both to the values of hyperparameters and to randomness during the optimization of the classifiers.
+It was therefore necessary to perform a hyperparameter search over the most impactful hyperparameters: learning rate and number of classifiers (which apply to both AdaBoost and Gradient Boosting).
+This was done using K-fold cross validation over the training set using randomized search.
+We used $K=5$ to ensure that the vast majority of training data (80\%) remained to be used from training, and because $K=10$ showed worse performance.
+Since both hyperparameters can vary over several orders of magnitude, both were drawn from a log-uniform distribution - learning rate from $[0.00001, 0.1]$ and number of classifiers from $(20, 1000)$.
+Unlike with logistic regression, it was also necessary to optimize the search for balanced accuracy, given by \[\frac{1}{2}\left(\frac{TP}{TP+FN} + \frac{TN}{TN+FP}\right),\] in order to avoid the classifiers assigning almost all test data points to the negative class (i.e., return less than market return).
+
+\subsubsection{Results}
+
+The main classification metrics for our classifiers are located in Table \ref{tab:excess_return_prediction}.
+We predict negative if the stock will fall relative to the market, and postive if it will rise.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Metric} & \textbf{Logistic Regression} & \textbf{AdaBoost} & \textbf{Gradient Boosting} \\
+\hline
+Accuracy & $0.57$ & $0.53$ & $0.53$ \\
+\hline
+Negative Precision & $0.58$ & $0.59$ & $0.58$ \\
+\hline
+Negative Recall & $0.88$ & $0.57$ & $0.66$ \\
+\hline
+Positive Precision & $0.52$ & $0.47$ & $0.46$ \\
+\hline
+Positive Recall & $0.17$ & $0.49$ & $0.37$ \\
+\hline
+Confusion Matrix \\
+\(
+\begin{bmatrix}
+TN & FP \\
+FN & TP \\
+\end{bmatrix}
+\)
+&
+\(
+\begin{bmatrix}
+80 & 11 \\
+58 & 12 \\
+\end{bmatrix}
+\)
+&
+\(
+\begin{bmatrix}
+52 & 39 \\
+36 & 34 \\
+\end{bmatrix}
+\)
+&
+\(
+\begin{bmatrix}
+60 & 31 \\
+44 & 26 \\
+\end{bmatrix}
+\)
+\\
+\end{tabular}
+\caption{Results for stock movement (excess return) prediction\\
+Predictions use all features (expectation and sentiment). Trained on training data for which all features are present. Predictions use imputed features where missing.}
+\label{tab:excess_return_prediction}
+\end{table}
+
+To compare the importance of our features, we will compare the accuracy of Gradient Boosting, using the hyperparameters described above, on four sets of training data:
+all features, using imputed features where needed (``imputed'');
+expectation features only, with no imputation (``expectation'');
+sentiment features only, with no imputation (``sentiment'');
+and all features, with no imputation (``combined'').
+All of these models ran against the test dataset with imputed features.
+The result is shown in Table \ref{tab:excess_return_different_data}.
+It can be seen that the greatest accuracy can be found when using only the expectation features.
+In fact, adding features for the sentiment decreases accuracy somewhat.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Dataset} & \textbf{Accuracy} & \textbf{Confusion Matrix} \\
+\hline
+imputed & $0.54$
+&
+\(
+\begin{bmatrix}
+72 & 19 \\
+55 & 15 \\
+\end{bmatrix}
+\) \\
+\hline
+expectation & $0.58$
+&
+\(
+\begin{bmatrix}
+90 & 1 \\
+67 & 3 \\
+\end{bmatrix}
+\) \\
+\hline
+sentiment & $0.52$
+&
+\(
+\begin{bmatrix}
+78 & 13 \\
+65 & 5 \\
+\end{bmatrix}
+\) \\
+\hline
+combined & $0.53$
+&
+\(
+\begin{bmatrix}
+60 & 31 \\
+44 & 26
+\end{bmatrix}
+\) \\
+\caption{Comparison between Gradient Boosting models trained on different features.\\
+Predictions are run on imputed data.}
+%\label{tab:excess_return_prediction}
+\end{tabular}
+
+A limitation of our data analysis is that not all transcripts included EPS and revenue expectation results.
+This means that we had to discard this data (about 20\% of our training data and 40\% of our test data).
+
 
 
 \section{Conclusion / Future Work}
 \instructions{%
 Summarize your report and reiterate key points. Which algorithms were the highest-performing? Why do you think that some algorithms worked better than others? For future work, if you had more time, more team members, or more computational resources, what would you explore?
 }
+
+https://arxiv.org/pdf/1310.4546.pdf
+
+Distributed Representations of Words and Phrases
+and their Compositionality
 
 \section{Appendices}
 \instructions{%
